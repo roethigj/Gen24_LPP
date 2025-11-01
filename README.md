@@ -10,13 +10,17 @@ Home assistant Custom Component for limiting Fronius Gen24 Inverter according to
 > This is an unofficial implementation and not supported by Fronius. It might stop working at any point in time.
 > You are using this module (and it's prerequisites/dependencies) at your own risk. Not me neither any of contributors to this or any prerequired/dependency project are responsible for damage in any kind caused by this project or any of its prerequsites/dependencies.
 
-# Installation
 
+## Setup
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=klein0r&repository=ha-ekeylegacy&category=Integration)
+
+or 
+# Installation
 HACS installation
 * Go to HACS
 * Click on the 3 dots in the top right corner.
 * Select "Custom repositories"
-* Add the [URL](https://github.com/roethigj/gen24_lpp) to the repository.
+* Add the [URL](https://github.com/roethigj/Gen24_LPP) to the repository.
 * Select the 'integration' type.
 * Click the "ADD" button.
 
