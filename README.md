@@ -30,6 +30,7 @@ After reboot of Home-Assistant, this integration can be configured through the i
 
 > [!IMPORTANT]
 > Update your GEN24 inverter firmware to 1.34.6-1 or higher.
+> 
 > Technician Account needed.
 
 # Usage
