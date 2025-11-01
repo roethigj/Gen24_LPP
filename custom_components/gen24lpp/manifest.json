@@ -1,0 +1,12 @@
+{
+    "domain": "gen24lpp",
+    "name": "Gen24_LPP",
+    "codeowners": ["@roethigj"],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/roethigj/gen24_lpp/",
+    "iot_class": "local_polling",
+    "issue_tracker": "https://github.com/roethigj/gen24_lpp/issues",
+    "requirements": ["aiohttp>=3.8.1"],
+    "version": "0.0.1"
+}
