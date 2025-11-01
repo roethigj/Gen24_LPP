@@ -30,21 +30,30 @@ After reboot of Home-Assistant, this integration can be configured through the i
 
 > [!IMPORTANT]
 > Update your GEN24 inverter firmware to 1.34.6-1 or higher.
+> Technician Account needed.
 
 # Usage
+
+### Configuration
+| Value  | Description |
+| --- | --- |
+| IP_Address| Inverter IP address.  |
+| Username | Technician. Username of the Technician-Account. |
+| Password | Password for Technician. |
+| Size | Size of the PV in Wp. |
+| Name | Name for the Device. |
+
+
+
 
 ### Controls
 
 In progress
 | Entity  | Description |
 | --- | --- |
-| Discharge Limit | This is maxium discharging power in watts of which the battery can be discharged by.  |
-| Grid Charge Power | The charging power in watts when the storage is being charged from the grid. Note that grid charging is seems to be limited to an effictive 50% by the hardware. |
-| Grid Discharge Power | The discharging power in watts when the storage is being discharged to the grid. |
-| Minimum Reserve | The minimum reserve for storage when discharging. Note that the storage will charge from the grid with 0.5kW if SOC falls below this level. Called 'Reserve Capacity' in Fronius Web UI. |
-| PV Charge Limit  | This is maximum PV charging power in watts of which the battery can be charged by.  |
+| Soft Limit | Sets the Dynymic Export Limit. Only written to inverter, when Limitation is active.  |
+| Soft Limit enabled | Enables or disables the Limitation. |
 
 # Credits:
 Heavily Copied from:
 https://github.com/wiggal/GEN24_Ladesteuerung - for http requests
-https://github.com/redpomodoro/fronius_modbus - for HACS structure
