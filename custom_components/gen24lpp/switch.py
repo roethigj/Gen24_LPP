@@ -115,9 +115,10 @@ class SoftLimitSwitch(SwitchEntity):
             payload={},
             add_praefix=True
         )
+        if self.response:
+            res = json.loads(self.response)
+            self._is_on = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
 
-        res = json.loads(self.response)
-        self._is_on = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
         self._attr_is_on = self._is_on
         self.async_write_ha_state()
 

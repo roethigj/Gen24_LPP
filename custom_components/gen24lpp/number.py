@@ -92,9 +92,9 @@ class SoftLimitNumber(NumberEntity):
             payload={},
             add_praefix=True
         )
-
-        lpp = json.loads(self.response)
-        state = lpp["exportLimits"]["activePower"]["softLimit"]["enabled"]
+        if self.response:
+            lpp = json.loads(self.response)
+            state = lpp["exportLimits"]["activePower"]["softLimit"]["enabled"]
         if state:
             lpp = self._fronius.lpp_on
             lpp["exportLimits"]["activePower"]["softLimit"]["powerLimit"] = self._limit
@@ -120,9 +120,12 @@ class SoftLimitNumber(NumberEntity):
             add_praefix=True
         )
 
-        res = json.loads(self.response)
-        limit = res["exportLimits"]["activePower"]["softLimit"]["powerLimit"]
-        state = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
+        if self.response:
+            res = json.loads(self.response)
+            limit = res["exportLimits"]["activePower"]["softLimit"]["powerLimit"]
+            state = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
+        else:
+            limit = 0
         if state:
             self._attr_native_value = limit * 100 / self._size
             self.async_write_ha_state()
@@ -136,9 +139,11 @@ class SoftLimitNumber(NumberEntity):
             payload={},
             add_praefix=True
         )
-
-        res = json.loads(self.response)
-        limit = res["exportLimits"]["activePower"]["softLimit"]["powerLimit"]
+        if self.response:
+            res = json.loads(self.response)
+            limit = res["exportLimits"]["activePower"]["softLimit"]["powerLimit"]
+        else:
+            limit = 0
         self._attr_native_value = limit * 100 / self._size
         self.async_write_ha_state()
 
