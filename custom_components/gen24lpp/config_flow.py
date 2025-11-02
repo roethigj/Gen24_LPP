@@ -52,7 +52,7 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except ConnectionError:
-                errors["base"] = "login failed!"
+                return "", "login failed!"
 
             if not errors:
                 name = user_input[CONF_NAME]

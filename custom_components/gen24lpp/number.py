@@ -126,6 +126,7 @@ class SoftLimitNumber(NumberEntity):
             state = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
         else:
             limit = 0
+            state = False
         if state:
             self._attr_native_value = limit * 100 / self._size
             self.async_write_ha_state()
