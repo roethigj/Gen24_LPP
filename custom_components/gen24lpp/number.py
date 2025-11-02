@@ -95,6 +95,8 @@ class SoftLimitNumber(NumberEntity):
         if self.response:
             lpp = json.loads(self.response)
             state = lpp["exportLimits"]["activePower"]["softLimit"]["enabled"]
+        else:
+            state = False
         if state:
             lpp = self._fronius.lpp_on
             lpp["exportLimits"]["activePower"]["softLimit"]["powerLimit"] = self._limit
