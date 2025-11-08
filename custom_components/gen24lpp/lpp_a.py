@@ -1,3 +1,5 @@
+"""http request handler."""
+
 import hashlib
 import os
 
@@ -38,18 +40,19 @@ LPP_OFF = {
 
 
 class FroniusGEN24:
-    def __init__(self, host: str, user: str, password: str, debug: bool = False):
+    """Fronius GEN24 LPP HTTP Request Handler mit Digest-Auth."""
+
+    def __init__(self, host: str, user: str, password: str):
         self.host = host
         self.user = user.lower()
         self.password = password
-        self.session = None  # <-- geändert: aiohttp-Session wird asynchron erstellt
+        self.session = None
         self.realm = None
         self.nonce = None
         self.qop = None
         self.opaque = None
         self.algorithm = "MD5"
         self.nc = 0
-        self.debug = debug
         self.lpp_on = LPP_ON
         self.lpp_off = LPP_OFF
 
@@ -57,24 +60,19 @@ class FroniusGEN24:
         self.login_path = "/api/commands/Login"
         self.timeofuse_path = "/api/config/timeofuse"
         self.powerlimit_path = "/api/config/limit_settings/powerLimits"
-        self._debug("HTTP_Pfade: " + self.login_path + "," + self.powerlimit_path)
 
     async def init_session(self):
-        """Initialisiert aiohttp ClientSession"""
+        """Initialisiert aiohttp ClientSession."""
         if not self.session:
-            self.session = aiohttp.ClientSession()  # <-- hinzugefügt
+            self.session = aiohttp.ClientSession()
 
     async def close(self):
-        """Schließt die aiohttp-Session"""
+        """Schließt die aiohttp-Session."""
         if self.session:
-            await self.session.close()  # <-- hinzugefügt
-
-    def _debug(self, msg: str):
-        if self.debug:
-            print("DEBUG ", msg)
+            await self.session.close()
 
     async def _get_auth_params(self, url: str):
-        """Fordert 401 an, um die Digest-Parameter zu bekommen"""
+        """Fordert 401 an, um die Digest-Parameter zu bekommen."""
         async with self.session.get(
             url
         ) as r:  # <-- geändert: async context mit aiohttp
@@ -97,12 +95,6 @@ class FroniusGEN24:
             self.qop = params.get("qop")
             self.opaque = params.get("opaque")
             self.algorithm = params.get("algorithm", "MD5")
-
-            self._debug("Header_GET: " + header)
-            self._debug(
-                f"Auth-Params_neu: realm={self.realm}, nonce={self.nonce}, qop={self.qop}, "
-                f"algorithm={self.algorithm}, opaque={self.opaque}"
-            )
 
     def _hash(self, data: str) -> str:
         if self.algorithm.upper() in ["SHA-256", "SHA256"]:
@@ -129,23 +121,18 @@ class FroniusGEN24:
         )
         if self.opaque:
             header += f', opaque="{self.opaque}"'
-
-        self._debug(f"Authorization: {header}")
         return header
 
     async def _request(
         self, method: str, uri: str, headers=None, data=None, params=None
     ):
-        """Asynchrone HTTP-Anfrage mit Digest-Auth"""
+        """Asynchrone HTTP-Anfrage mit Digest-Auth."""
         url = f"http://{self.host}{uri}"
         if headers is None:
             headers = {}
 
         # Ersten Auth-Header bauen
         headers["Authorization"] = self._build_auth_header(method, uri)
-        self._debug(
-            f"Request {method} {url} mit headers: {headers}, params: {params}, data: {data}"
-        )
 
         async with self.session.request(
             method, url, headers=headers, params=params, data=data
@@ -158,9 +145,9 @@ class FroniusGEN24:
                     method, url, headers=headers, params=params, data=data
                 ) as r2:
                     r2.raise_for_status()
-                    return await r2.text()  # <-- geändert: Text direkt zurückgeben
+                    return await r2.text()
             r.raise_for_status()
-            return await r.text()  # <-- geändert
+            return await r.text()
 
     async def send_request(
         self,
@@ -182,23 +169,23 @@ class FroniusGEN24:
             result = await self._request(
                 method, path, headers=headers, data=payload, params=params
             )
-            # await self.close()
             return result
         except Exception as e:
-            self._debug(f"Request auf {path} fehlgeschlagen: {e}")
-            print("\nLogin fehlgeschlagen: Kennwort prüfen oder GEN24 neu setzen!\n")
+            # Ensure we close the session on error to avoid "Unclosed client session"
+            await self.close()
 
-    async def login(self) -> bool:
-        """Asynchroner Login über Digest-Auth"""
+    async def login(self):
+        """Asynchroner Login über Digest-Auth."""
+
         uri = self.login_path
         await self.init_session()
         try:
-            result = await self._request("GET", uri, params={"user": self.user})
-            self._debug(f"Login Response: {result[:200]}")
-
+            await self._request("GET", uri, params={"user": self.user})
             return True
-        except Exception as e:
-            self._debug(f"Login fehlgeschlagen: {e}")
-            await self.close()
 
+        except Exception as e:
             return False
+
+        finally:
+            # Always close the session after attempting login to avoid leaks
+            await self.close()

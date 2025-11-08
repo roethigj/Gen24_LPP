@@ -9,13 +9,6 @@ from homeassistant import config_entries, core
 from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 
-# from homeassistant.const import CONF_NAME, CONF_HOST, CONF_USER, CONF_PASSWORD, CONF_SIZE
-
-from .const import (
-    DOMAIN,
-    CONF_SIZE,
-    CONF_NAME,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,4 +31,9 @@ async def async_unload_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if (unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)):
+        try:
+            entry.runtime_data.listener()
+        except AttributeError:
+            pass
+    return unload_ok

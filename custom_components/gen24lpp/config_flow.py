@@ -2,12 +2,21 @@
 
 import logging
 
+import paho.mqtt.client as mqtt
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_NAME, CONF_SIZE, DOMAIN
+from .const import (
+    CONF_NAME,
+    CONF_SIZE,
+    DOMAIN,
+    # MqttBroker,
+    # MqttPassword,
+    # MqttPort,
+    # MqttUser,
+)
 from .lpp_a import FroniusGEN24
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,15 +28,19 @@ SCHEMA_DEVICE = vol.Schema(
         vol.Required(CONF_PASSWORD, default=""): str,
         vol.Required(CONF_SIZE, default=10000): int,
         vol.Optional(CONF_NAME, default="gen24_lpp"): str,
+        # vol.Optional(MqttBroker, default="localhost"): str,
+        # vol.Optional(MqttPort, default=1883): int,
+        # vol.Optional(MqttUser, default=""): str,
+        # vol.Optional(MqttPassword, default=""): str,
     }
 )
 
 
 async def validate_connection(ip: str, user: str, password: str) -> None:
     """Validate Inverter Connection."""
-    fronius = FroniusGEN24(ip, user, password, debug=False)
-
-    if not await fronius.login():
+    fronius = FroniusGEN24(ip, user, password)
+    test = await fronius.login()
+    if not test:
         _LOGGER.error(f"Cannot login")
         raise ConnectionError
 
@@ -52,7 +65,20 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except ConnectionError:
-                return "", "login failed!"
+                errors["base"] = "login"
+
+            # try:
+            #     mqtt_client = mqtt.Client()
+            #     if len(user_input[MqttUser]) > 0:
+            #         mqtt_client.username_pw_set(
+            #             user_input[MqttUser], user_input[MqttPassword]
+            #         )
+            #         mqtt_client.connect(
+            #             user_input[MqttBroker], user_input[MqttPort], 60
+            #         )
+            #         mqtt_client.disconnect()
+            # except Exception:
+            #     errors["base"] = "mqtt_connection_failed"
 
             if not errors:
                 name = user_input[CONF_NAME]

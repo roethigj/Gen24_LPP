@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
+import random
+
+import paho.mqtt.client as mqtt
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -82,6 +85,45 @@ class SoftLimitNumber(NumberEntity):
             model="Gen24LPP",
         )
 
+        # self._mqtt_broker = entry.data[MqttBroker]
+        # self._mqtt_user = entry.data[MqttUser]
+        # self._mqtt_password = entry.data[MqttPassword]
+        # self._mqtt_port = entry.data[MqttPort]
+        # self._mqtt_client = mqtt.Client()
+        # self._mqtt_client.username_pw_set(self._mqtt_user, self._mqtt_password)
+        # self._client_id = f'gen24lpp_{random.randint(0, 1000)}'
+        # self._topic = "gen24lpp/lpp"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the native value of the number entity."""
+        return self._attr_native_value
+
+    # def publish_mqtt(self, limit: int, power_limit: int, state: bool) -> None:
+    #     """Publish the limit, power limit, and state using MQTT."""
+    #     payload = {
+    #         "limit in %": limit,
+    #         "powerLimit in W": power_limit
+    #     }
+    #     for topic, value in payload.items():
+    #         _LOGGER.debug("Publishing to MQTT topic '%s': %s", topic, value)
+    #         topic_full = f"{self._topic}/{topic.replace(' ', '_').lower()}"
+    #         self._mqtt_client.publish(topic_full, value, 1)
+
+    # def subscribe_mqtt(self) -> None:
+    #     """Subscribe to MQTT topics if needed."""
+    #     def on_message(client, userdata, msg):
+    #         match msg.topic:
+    #             case str (x) if "limit_in_%" in x:
+    #                 self._attr_native_value = int(msg.payload.decode())
+    #                 self._limit = int(self._attr_native_value * self._size / 100)
+    #             case str (x) if "powerlimit_in_w" in x:
+    #                 self._limit = int(msg.payload.decode())
+    #                 self._attr_native_value = self._limit * 100 / self._size
+
+    #     self._mqtt_client.subscribe(f"{self._topic}/#")
+    #     self._mqtt_client.on_message = on_message
+
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         self._limit = int(value * self._size / 100)
@@ -110,7 +152,7 @@ class SoftLimitNumber(NumberEntity):
         else:
             self._fronius.lpp_on["exportLimits"]["activePower"]["softLimit"]["powerLimit"] = self._limit
 
-
+        # self.publish_mqtt(int(self._limit * 100 / self._size), self._limit, state)
         self._attr_native_value = int(self._limit * 100 / self._size)
         self.async_write_ha_state()
 
@@ -132,9 +174,23 @@ class SoftLimitNumber(NumberEntity):
         if state:
             self._attr_native_value = limit * 100 / self._size
             self.async_write_ha_state()
+        # self.publish_mqtt(int(self._limit * 100 / self._size), self._limit, state)
+
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
+        def on_connect(client, userdata, flags, rc):
+            if rc == 0:
+                # self.subscribe_mqtt()
+                _LOGGER.info("Connected to MQTT Broker!")
+            else:
+                _LOGGER.error("Failed to connect, return code %d\n", rc)
+        # try:
+        #     self._mqtt_client.connect(self._mqtt_broker, self._mqtt_port, 60)
+        #     self._mqtt_client.on_connect = on_connect
+        #     self._mqtt_client.loop_start()
+        # except Exception as e:
+        #     _LOGGER.error("Connection attempt failed: %s", e)
 
         self.response = await self._fronius.send_request(
             "config/limit_settings/powerLimits",
@@ -145,8 +201,10 @@ class SoftLimitNumber(NumberEntity):
         if self.response:
             res = json.loads(self.response)
             limit = res["exportLimits"]["activePower"]["softLimit"]["powerLimit"]
+            state = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
         else:
             limit = 0
+        # self.publish_mqtt(int(self._limit * 100 / self._size), self._limit, state)
         self._attr_native_value = limit * 100 / self._size
         self.async_write_ha_state()
 
@@ -154,3 +212,5 @@ class SoftLimitNumber(NumberEntity):
         """Handle entity which will be removed."""
         await self._fronius.close()
 
+        # self._mqtt_client.loop_stop()
+        # self._mqtt_client.disconnect()
