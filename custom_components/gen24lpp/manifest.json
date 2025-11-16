@@ -7,6 +7,6 @@
     "documentation": "https://github.com/roethigj/gen24_lpp/",
     "iot_class": "local_polling",
     "issue_tracker": "https://github.com/roethigj/gen24_lpp/issues",
-    "requirements": ["aiohttp>=3.8.1"],
-    "version": "0.0.2"
+    "requirements": ["aiohttp>=3.8.1","paho-mqtt>=2.1.0"],
+    "version": "0.0.3"
 }

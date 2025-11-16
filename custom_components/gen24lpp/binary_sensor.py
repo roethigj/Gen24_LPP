@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
-# import random
+import random
+
+import paho.mqtt.client as mqtt
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -18,7 +20,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_SIZE
+from .const import (
+    CONF_SIZE,
+    LIMITED_PRODUCTION,
+    MqttBroker,
+    MqttPassword,
+    MqttPort,
+    MqttUser,
+)
 from .lpp_a import FroniusGEN24
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +65,7 @@ class SoftLimitSwitch(SwitchEntity):
     ) -> None:
         """Initialize the switch."""
         self._is_on = False
+        self._is_on_set = False
         self._entry = entry
         self.entity_description = description
         self._ensure_runtime_called = False
@@ -77,14 +87,14 @@ class SoftLimitSwitch(SwitchEntity):
             model="Gen24LPP",
         )
 
-        # self._mqtt_broker = entry.data[MqttBroker]
-        # self._mqtt_user = entry.data[MqttUser]
-        # self._mqtt_password = entry.data[MqttPassword]
-        # self._mqtt_port = entry.data[MqttPort]
-        # self._mqtt_client = mqtt.Client()
-        # self._mqtt_client.username_pw_set(self._mqtt_user, self._mqtt_password)
-        # self._client_id = f"gen24lpp_{random.randint(0, 1000)}"
-        # self._topic = "gen24lpp/lpp"
+        self._mqtt_broker = entry.data[MqttBroker]
+        self._mqtt_user = entry.data[MqttUser]
+        self._mqtt_password = entry.data[MqttPassword]
+        self._mqtt_port = entry.data[MqttPort]
+        self._mqtt_client = mqtt.Client()
+        self._mqtt_client.username_pw_set(self._mqtt_user, self._mqtt_password)
+        self._client_id = f"gen24lpp_{random.randint(0, 1000)}"
+        self._topic_bool = entry.data[LIMITED_PRODUCTION]
 
     @property
     def is_on(self):
@@ -101,22 +111,25 @@ class SoftLimitSwitch(SwitchEntity):
     #         topic_full = f"{self._topic}/{topic.replace(' ', '_').lower()}"
     #         self._mqtt_client.publish(topic_full, value, 1)
 
-    # def subscribe_mqtt(self) -> None:
-    #     """Subscribe to MQTT topics if needed."""
+    def subscribe_mqtt(self) -> None:
+        """Subscribe to MQTT topics if needed."""
 
-    #     def on_message(client, userdata, msg):
-    #         match msg.topic:
-    #             case str(x) if "state" in x:
-    #                 if msg.payload.decode().lower() == "true":
-    #                     self._is_on = True
-    #                 else:
-    #                     self._is_on = False
+        def on_message(client, userdata, msg):
+            match msg.topic:
+                case str(x) if f"{self._topic_bool}" in x:
+                    if msg.payload.decode().lower() == "true":
+                        self._is_on = True
+                    else:
+                        self._is_on = False
 
-    #     self._mqtt_client.subscribe(f"{self._topic}/#")
-    #     self._mqtt_client.on_message = on_message
+        self._mqtt_client.subscribe(f"{self._topic_bool}")
+        self._mqtt_client.on_message = on_message
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
+
+        print("async turn on")
+
         lpp = self._fronius.lpp_on
         lpp["visualization"]["wattPeakReferenceValue"] = self._entry.data[CONF_SIZE]
         self.response = await self._fronius.send_request(
@@ -132,6 +145,7 @@ class SoftLimitSwitch(SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
+        print("async turn off")
         lpp = self._fronius.lpp_off
         self.response = await self._fronius.send_request(
             "config/limit_settings/powerLimits",
@@ -146,24 +160,22 @@ class SoftLimitSwitch(SwitchEntity):
     async def async_update(self):
         """Fetch updates from the device."""
 
-        self.response = await self._fronius.send_request(
-            "config/limit_settings/powerLimits",
-            method="GET",
-            payload={},
-            add_praefix=True,
-        )
-        if self.response:
-            res = json.loads(self.response)
-            self._is_on_set = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
-        if str(self._is_on_set).lower() == "false":
-            self._is_on_set_bool = False
-        else:
-            self._is_on_set_bool = True
-        if self._is_on_set_bool:
+        # self.response = await self._fronius.send_request(
+        #     "config/limit_settings/powerLimits",
+        #     method="GET",
+        #     payload={},
+        #     add_praefix=True,
+        # )
+        # if self.response:
+        #     res = json.loads(self.response)
+        #     self._is_on_set = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
+        if self._is_on_set:
             if not self._is_on:
+                self._is_on_set = False
                 await self.async_turn_off()
         else:
             if self._is_on:
+                self._is_on_set = True
                 await self.async_turn_on()
 
         # self._attr_is_on = self._is_on
@@ -175,40 +187,41 @@ class SoftLimitSwitch(SwitchEntity):
 
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
-                # self.subscribe_mqtt()
+                self.subscribe_mqtt()
                 _LOGGER.info("Connected to MQTT Broker!")
             else:
                 _LOGGER.error("Failed to connect, return code %d\n", rc)
 
-        # try:
-        #     self._mqtt_client.connect(self._mqtt_broker, self._mqtt_port, 60)
-        #     self._mqtt_client.on_connect = on_connect
-        #     self._mqtt_client.loop_start()
-        # except Exception as e:
-        #     _LOGGER.error("Connection attempt failed: %s", e)
+        try:
+            self._mqtt_client.connect(self._mqtt_broker, self._mqtt_port, 60)
+            self._mqtt_client.on_connect = on_connect
+            self._mqtt_client.loop_start()
+        except Exception as e:
+            _LOGGER.error("Connection attempt failed: %s", e)
 
-        self.response = await self._fronius.send_request(
-            "config/limit_settings/powerLimits",
-            method="GET",
-            payload={},
-            add_praefix=True,
-        )
-        if self.response:
-            res = json.loads(self.response)
-            state_string = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
-            if str(state_string).lower() == "true":
-                state = True
-            else:
-                state = False
-        else:
-            state = False
+        # self.response = await self._fronius.send_request(
+        #     "config/limit_settings/powerLimits",
+        #     method="GET",
+        #     payload={},
+        #     add_praefix=True,
+        # )
+        # if self.response:
+        #     res = json.loads(self.response)
+        #     state_string = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
+        #     if str(state_string).lower() == "true":
+        #         state = True
+        #     else:
+        #         state = False
+        # else:
+        #     state = False
         # self.publish_mqtt(state)
-        self._is_on = state
+        # self._is_on = state
         self.async_write_ha_state()
+        await self.async_update()
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity which will be removed."""
         await self._fronius.close()
 
-        # self._mqtt_client.loop_stop()
-        # self._mqtt_client.disconnect()
+        self._mqtt_client.loop_stop()
+        self._mqtt_client.disconnect()

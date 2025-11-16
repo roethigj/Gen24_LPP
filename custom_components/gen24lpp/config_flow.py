@@ -12,10 +12,12 @@ from .const import (
     CONF_NAME,
     CONF_SIZE,
     DOMAIN,
-    # MqttBroker,
-    # MqttPassword,
-    # MqttPort,
-    # MqttUser,
+    MqttBroker,
+    MqttPassword,
+    MqttPort,
+    MqttUser,
+    LIMITED_PRODUCTION,
+    ALLOWED_LIMIT,
 )
 from .lpp_a import FroniusGEN24
 
@@ -28,10 +30,12 @@ SCHEMA_DEVICE = vol.Schema(
         vol.Required(CONF_PASSWORD, default=""): str,
         vol.Required(CONF_SIZE, default=10000): int,
         vol.Optional(CONF_NAME, default="gen24_lpp"): str,
-        # vol.Optional(MqttBroker, default="localhost"): str,
-        # vol.Optional(MqttPort, default=1883): int,
-        # vol.Optional(MqttUser, default=""): str,
-        # vol.Optional(MqttPassword, default=""): str,
+        vol.Optional(MqttBroker, default="localhost"): str,
+        vol.Optional(MqttPort, default=1883): int,
+        vol.Optional(MqttUser, default=""): str,
+        vol.Optional(MqttPassword, default=""): str,
+        vol.Optional(LIMITED_PRODUCTION, default=""): str,
+        vol.Optional(ALLOWED_LIMIT, default=""): str,
     }
 )
 
@@ -67,18 +71,18 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
             except ConnectionError:
                 errors["base"] = "login"
 
-            # try:
-            #     mqtt_client = mqtt.Client()
-            #     if len(user_input[MqttUser]) > 0:
-            #         mqtt_client.username_pw_set(
-            #             user_input[MqttUser], user_input[MqttPassword]
-            #         )
-            #         mqtt_client.connect(
-            #             user_input[MqttBroker], user_input[MqttPort], 60
-            #         )
-            #         mqtt_client.disconnect()
-            # except Exception:
-            #     errors["base"] = "mqtt_connection_failed"
+            try:
+                mqtt_client = mqtt.Client()
+                if len(user_input[MqttUser]) > 0:
+                    mqtt_client.username_pw_set(
+                        user_input[MqttUser], user_input[MqttPassword]
+                    )
+                    mqtt_client.connect(
+                        user_input[MqttBroker], user_input[MqttPort], 60
+                    )
+                    mqtt_client.disconnect()
+            except Exception:
+                errors["base"] = "mqtt_connection_failed"
 
             if not errors:
                 name = user_input[CONF_NAME]
