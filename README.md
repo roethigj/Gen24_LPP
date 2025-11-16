@@ -3,6 +3,10 @@
 # Gen24_LPP
 Home assistant Custom Component for limiting Fronius Gen24 Inverter according to §9 EEG 2025.
 
+You may listen to MQTT whether there is a limitation, and what the limit is.
+
+This is the Counterpart to my Add On eebus2mqqtt. It acts as a EMS and publishes the limitations from a Control Box to MQTT.
+
 
 > [!CAUTION]
 > This is a work in progress project - it is still in early development stage, so there are still breaking changes possible.
@@ -36,24 +40,19 @@ After reboot of Home-Assistant, this integration can be configured through the i
 # Usage
 
 ### Configuration
-| Value  | Description |
-| --- | --- |
-| IP_Address| Inverter IP address.  |
+| Value  | Description                                     |
+| --- |-------------------------------------------------|
+| IP_Address| Inverter IP address.                            |
 | Username | Technician. Username of the Technician-Account. |
-| Password | Password for Technician. |
-| Size | Size of the PV in Wp. |
-| Name | Name for the Device. |
-
-
-
-
-### Controls
-
-In progress
-| Entity  | Description |
-| --- | --- |
-| Soft Limit | Sets the Dynymic Export Limit. Only written to inverter, when Limitation is active.  |
-| Soft Limit enabled | Enables or disables the Limitation. |
+| Password | Password for Technician.                        |
+| Size | Size of the PV in Wp.                           |
+| Name | Name for the Device.                            |
+| MqttBroker | MQTT Broker IP.                                 |
+| MqttPort | MQTT Port                                       |
+| MqttUser | MQTT User                                       |
+| MqttPassword | MQTT Password                                   |
+| LIMITED_PRODUCTION | MQTT Topic for Active Production Limit (bool).  |
+| ALLOWED_LIMIT | MQTT Topic for Production Limit in W.           |
 
 # Credits:
 Heavily Copied from:
