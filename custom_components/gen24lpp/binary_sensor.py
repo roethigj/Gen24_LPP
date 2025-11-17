@@ -96,6 +96,11 @@ class SoftLimitSwitch(SwitchEntity):
         self._client_id = f"gen24lpp_{random.randint(0, 1000)}"
         self._topic_bool = entry.data[LIMITED_PRODUCTION]
 
+        self._limit = self._fronius.lpp_on["exportLimits"]["activePower"]["softLimit"][
+            "powerLimit"
+        ]
+        self._limit_old = self._limit
+
     @property
     def is_on(self):
         """If the switch is currently on or off."""
@@ -169,10 +174,16 @@ class SoftLimitSwitch(SwitchEntity):
         # if self.response:
         #     res = json.loads(self.response)
         #     self._is_on_set = res["exportLimits"]["activePower"]["softLimit"]["enabled"]
+        self._limit = self._fronius.lpp_on["exportLimits"]["activePower"]["softLimit"][
+            "powerLimit"
+        ]
         if self._is_on_set:
             if not self._is_on:
                 self._is_on_set = False
                 await self.async_turn_off()
+            elif self._limit != self._limit_old:  # accept new limit when on
+                self._limit_old = self._limit
+                await self.async_turn_on()
         else:
             if self._is_on:
                 self._is_on_set = True

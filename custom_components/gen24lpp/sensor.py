@@ -132,11 +132,8 @@ class SoftLimitNumber(NumberEntity):
             match msg.topic:
                 case str(x) if f"{self._topic_value}" in x:
                     self._limit = int(msg.payload.decode())
-                    self.lpp_on["exportLimits"]["activePower"]["softLimit"][
-                        "powerLimit"
-                    ] = self._limit
                     # print("limit empfangen: ", self._limit)
-                    self._attr_native_value = self._limit * 100 / self._size
+                    # self._attr_native_value = self._limit * 100 / self._size
 
         self._mqtt_client.subscribe(f"{self._topic_value}")
 
@@ -173,6 +170,7 @@ class SoftLimitNumber(NumberEntity):
         #     ] = self._limit
 
         # self.publish_mqtt(int(self._limit * 100 / self._size), self._limit, state)
+
         self._attr_native_value = int(value * 100 / self._size)
         self.async_write_ha_state()
 
@@ -194,6 +192,11 @@ class SoftLimitNumber(NumberEntity):
         #         state = False
         #     if state:
         #         self._attr_native_value = limit * 100 / self._size
+        self.lpp_on["exportLimits"]["activePower"]["softLimit"]["powerLimit"] = (
+            self._limit
+        )
+        self._attr_native_value = self._limit * 100 / self._size
+
         self.async_write_ha_state()
 
     #     # self.publish_mqtt(int(self._limit * 100 / self._size), self._limit, state)
