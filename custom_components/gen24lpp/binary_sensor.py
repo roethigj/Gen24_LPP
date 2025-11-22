@@ -34,6 +34,7 @@ from .const import (
 from .lpp_a import FroniusGEN24
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=1)
 
 
 async def async_setup_entry(
