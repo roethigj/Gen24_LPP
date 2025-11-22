@@ -40,19 +40,19 @@ After reboot of Home-Assistant, this integration can be configured through the i
 # Usage
 
 ### Configuration
-| Value  | Description                                     |
-| --- |-------------------------------------------------|
-| IP_Address| Inverter IP address.                            |
-| Username | Technician. Username of the Technician-Account. |
-| Password | Password for Technician.                        |
-| Size | Size of the PV in Wp.                           |
-| Name | Name for the Device.                            |
-| MqttBroker | MQTT Broker IP.                                 |
-| MqttPort | MQTT Port                                       |
-| MqttUser | MQTT User                                       |
-| MqttPassword | MQTT Password                                   |
+| Value              | Description                                     |
+|--------------------|-------------------------------------------------|
+| IP_Address         | Inverter IP address.                            |
+| Username           | Technician. Username of the Technician-Account. |
+| Password           | Password for Technician.                        |
+| Size               | Size of the PV in Wp.                           |
+| Name               | Name for the Device.                            |
+| MqttBroker         | MQTT Broker IP.                                 |
+| MqttPort           | MQTT Port                                       |
+| MqttUser           | MQTT User                                       |
+| MqttPassword       | MQTT Password                                   |
 | LIMITED_PRODUCTION | MQTT Topic for Active Production Limit (bool).  |
-| ALLOWED_LIMIT | MQTT Topic for Production Limit in W.           |
+| ALLOWED_LIMIT      | MQTT Topic for Production Limit in W.           |
 
 # Credits:
 Heavily Copied from:
