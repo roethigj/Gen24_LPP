@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # List of platforms to support. There should be a matching .py file for each,
 # eg <cover.py> and <sensor.py>
-_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.TEXT]
 
 
 async def async_setup_entry(

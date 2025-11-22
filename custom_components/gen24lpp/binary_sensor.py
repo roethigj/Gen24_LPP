@@ -1,3 +1,4 @@
+
 """Number platform for gen24lpp."""
 
 from __future__ import annotations
@@ -7,6 +8,8 @@ import logging
 import random
 
 import paho.mqtt.client as mqtt
+
+from datetime import timedelta
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -46,7 +49,7 @@ async def async_setup_entry(
         SwitchEntityDescription(
             key="soft_limit_enabled",
             name="Soft Limit Enabled",
-            entity_category=EntityCategory.CONFIG,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entry,
     )
@@ -73,6 +76,8 @@ class SoftLimitSwitch(SwitchEntity):
         self._attr_has_entity_name = True
         self._attr_name = "Soft limit enabled"
         self._attr_icon = "mdi:lightning-bolt-circle"
+        self._attr_should_poll = True
+
         self._fronius = FroniusGEN24(
             entry.data[CONF_IP_ADDRESS],
             entry.data[CONF_USERNAME],
