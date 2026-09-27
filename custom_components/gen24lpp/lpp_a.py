@@ -13,28 +13,20 @@ LPP_ON = {
             "activated": True,
             "networkMode": "limitLocal",
         },
-        "failSafeModeEnabled": True,
-        "autodetectedControlledDevices": {},
-        "staticControlledDevices": {},
-    },
+        "failSafeModeEnabled": True},
     "visualization": {
         "wattPeakReferenceValue": 11000,
         "exportLimits": {"activePower": {}},
     },
 }
 
-LPP_OFF = {
-    "exportLimits": {
-        "activePower": {
-            "hardLimit": {"powerLimit": 0},
+LPP_OFF = {"exportLimits":
+    {"activePower":
+        {   "hardLimit": {"powerLimit": 0},
             "softLimit": {"enabled": False, "powerLimit": 0},
             "activated": False,
-            "networkMode": "limitLocal",
-        },
-        "failSafeModeEnabled": False,
-        "autodetectedControlledDevices": {},
-        "staticControlledDevices": {},
-    },
+            "networkMode": "limitLocal"},
+        "failSafeModeEnabled": False},
     "visualization": {"exportLimits": {"activePower": {}}},
 }
 
